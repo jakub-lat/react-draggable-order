@@ -2,7 +2,7 @@
   "name": "react-orderable",
   "author": "jakub",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "lib/index.js",
   "license": "MIT",
   "dependencies": {
     "react": "^17.0.2"
@@ -12,8 +12,5 @@
   },
   "scripts": {
     "build": "tsc"
-  },
-  "exports": {
-    ".": "./lib/index.js"
   }
 }
