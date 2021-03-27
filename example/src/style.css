@@ -1,0 +1,12 @@
+.active {
+    position: relative;
+}
+
+.active::before {
+    content: '';
+    width: 100%;
+    display: block;
+    position: absolute;
+    top: -22px;
+    border-top: 2px solid green;
+}
