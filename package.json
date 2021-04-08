@@ -1,7 +1,7 @@
 {
   "name": "react-draggable-order",
   "author": "jakubl",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "license": "MIT",
   "repository": "https://github.com/piratehacker/react-orderable",
   "scripts": {

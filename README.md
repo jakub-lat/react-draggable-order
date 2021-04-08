@@ -1,9 +1,9 @@
 # React Draggable Order
 
-### Component for custom orderable list
+**Component for custom orderable list**
 
 ## Demo
-### Take a look [here](https://piratehacker.github.io/react-draggable-order) for a working demo.
+**Take a look [here](https://piratehacker.github.io/react-draggable-order) for a working demo.*
 
 ## Basic usage
 
@@ -31,11 +31,11 @@ import { OrderGroup, OrderItem, defaultTheme } from 'react-draggable-order';
 
 ## How to style
 
-### [React component](https://github.com/piratehacker/react-draggable-order/tree/master/example/Customized.tsx)
-### [Example CSS](https://github.com/piratehacker/react-draggable-order/tree/master/example/customStyle.css)
+**[React component](https://github.com/piratehacker/react-draggable-order/tree/master/example/Customized.tsx)**
+**[Example CSS](https://github.com/piratehacker/react-draggable-order/tree/master/example/customStyle.css)**
 
 ## Advanced usage (using useOrder hook)
-### [See here](https://github.com/piratehacker/react-draggable-order/tree/master/example)
+**[See here](https://github.com/piratehacker/react-draggable-order/tree/master/example)**
 
 ## Full example code
-### [See here](https://github.com/piratehacker/react-draggable-order/tree/master/example)
+**[See here](https://github.com/piratehacker/react-draggable-order/tree/master/example)**
