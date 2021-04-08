@@ -102,38 +102,10 @@ function useOrder(_a) {
     var ref = _a.elementRef, wrapperRef = _a.wrapperRef, index = _a.index, onMove = _a.onMove, _c = _a.hoverClassName, hoverClassName = _c === void 0 ? 'hover' : _c;
     var _d = useState(false), isGrabbing = _d[0], setIsGrabbing = _d[1];
     var _e = useState([0, 0]), offset = _e[0], setOffset = _e[1];
-    var closestIndex = React.useRef(null);
+    var closestIndex = React.useRef();
     var closestElement = React.useRef();
     var isMounted = useIsMounted();
     var others = useContext(OrderGroupContext).others;
-    var dragStart = useCallback(function (e, pos) {
-        setIsGrabbing(true);
-        var offs = [
-            pos.pageX - ref.current.getBoundingClientRect().left,
-            pos.pageY - ref.current.getBoundingClientRect().top,
-        ];
-        setOffset(offs);
-        ref.current.style.transform = "translate(" + (pos.pageX - offs[0]) + "px, " + (pos.pageY - offs[1]) + "px)";
-    }, [ref]);
-    var dragEnd = useCallback(function () {
-        var _a, _b;
-        if (!isGrabbing)
-            return;
-        var i = closestIndex.current;
-        if (i !== null) {
-            if (i > index)
-                i -= 1;
-            if (i !== index) {
-                onMove(i);
-            }
-        }
-        (_b = (_a = closestElement.current) === null || _a === void 0 ? void 0 : _a.classList) === null || _b === void 0 ? void 0 : _b.remove(hoverClassName);
-        if (ref.current)
-            ref.current.style.transform = '';
-        if (isMounted()) {
-            setIsGrabbing(false);
-        }
-    }, [isGrabbing, index, isMounted, onMove, ref, hoverClassName]);
     var dragMove = useCallback(function (e, pos) {
         var _a, _b, _c, _d;
         if (!isGrabbing)
@@ -157,9 +129,41 @@ function useOrder(_a) {
             (_d = (_c = closestElement.current) === null || _c === void 0 ? void 0 : _c.classList) === null || _d === void 0 ? void 0 : _d.add(hoverClassName);
         }
     }, [isGrabbing, offset, ref, others, index, hoverClassName]);
+    var dragStart = useCallback(function (e, pos) {
+        setIsGrabbing(true);
+        if (e)
+            pauseEvent(e);
+        var offs = [
+            pos.pageX - ref.current.getBoundingClientRect().left,
+            pos.pageY - ref.current.getBoundingClientRect().top,
+        ];
+        setOffset(offs);
+        ref.current.style.transform = "translate(" + (pos.pageX - offs[0]) + "px, " + (pos.pageY - offs[1]) + "px)";
+    }, [ref]);
+    var dragEnd = useCallback(function () {
+        var _a, _b;
+        if (!isGrabbing)
+            return;
+        var i = closestIndex.current;
+        if (i !== undefined) {
+            if (i > index)
+                i -= 1;
+            if (i !== index) {
+                onMove(i);
+            }
+        }
+        (_b = (_a = closestElement.current) === null || _a === void 0 ? void 0 : _a.classList) === null || _b === void 0 ? void 0 : _b.remove(hoverClassName);
+        if (ref.current)
+            ref.current.style.transform = '';
+        closestElement.current = undefined;
+        closestIndex.current = undefined;
+        if (isMounted()) {
+            setIsGrabbing(false);
+        }
+    }, [isGrabbing, index, isMounted, onMove, ref, hoverClassName]);
     var mouseDown = function (e) { return dragStart(e, e); };
     var mouseMove = function (e) { return dragMove(e, e); };
-    var touchStart = function (e) { return dragStart(e, e.touches[0]); };
+    var touchStart = function (e) { return dragStart(null, e.touches[0]); };
     var touchMove = function (e) { return dragMove(null, e.touches[0]); };
     useEffect(function () {
         window.addEventListener('mouseup', dragEnd);

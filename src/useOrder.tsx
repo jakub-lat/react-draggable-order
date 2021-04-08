@@ -37,46 +37,11 @@ export default function useOrder<T extends HTMLElement>({
   const [isGrabbing, setIsGrabbing] = useState(false);
   const [offset, setOffset] = useState([0, 0]);
 
-  const closestIndex = React.useRef<null | number>(null);
-  const closestElement = React.useRef<HTMLHRElement>();
+  const closestIndex = React.useRef<number>();
+  const closestElement = React.useRef<HTMLElement>();
 
   const isMounted = useIsMounted();
   const { others } = useContext(OrderGroupContext);
-
-  const dragStart = useCallback(
-    (e, pos: Pos) => {
-      setIsGrabbing(true);
-
-      const offs = [
-        pos.pageX - ref.current.getBoundingClientRect().left,
-        pos.pageY - ref.current.getBoundingClientRect().top,
-      ];
-      setOffset(offs);
-      ref.current.style.transform = `translate(${pos.pageX - offs[0]}px, ${pos.pageY - offs[1]}px)`;
-    },
-    [ref],
-  );
-
-  const dragEnd = useCallback(() => {
-    if (!isGrabbing) return;
-
-    let i = closestIndex.current;
-
-    if (i !== null) {
-      if (i > index) i -= 1;
-
-      if (i !== index) {
-        onMove(i);
-      }
-    }
-
-    closestElement.current?.classList?.remove(hoverClassName);
-    if (ref.current) ref.current.style.transform = '';
-
-    if (isMounted()) {
-      setIsGrabbing(false);
-    }
-  }, [isGrabbing, index, isMounted, onMove, ref, hoverClassName]);
 
   const dragMove = useCallback(
     (e, pos: Pos) => {
@@ -101,7 +66,7 @@ export default function useOrder<T extends HTMLElement>({
       closestElement.current?.classList?.remove(hoverClassName);
 
       closestIndex.current = elementIndex;
-      closestElement.current = others[elementIndex] as HTMLHRElement;
+      closestElement.current = others[elementIndex] as HTMLElement;
 
       if ((elementIndex > index ? elementIndex - 1 : elementIndex) !== index) {
         closestElement.current?.classList?.add(hoverClassName);
@@ -110,9 +75,49 @@ export default function useOrder<T extends HTMLElement>({
     [isGrabbing, offset, ref, others, index, hoverClassName],
   );
 
+  const dragStart = useCallback(
+    (e, pos: Pos) => {
+      setIsGrabbing(true);
+
+      if (e) pauseEvent(e);
+
+      const offs = [
+        pos.pageX - ref.current.getBoundingClientRect().left,
+        pos.pageY - ref.current.getBoundingClientRect().top,
+      ];
+      setOffset(offs);
+      ref.current.style.transform = `translate(${pos.pageX - offs[0]}px, ${pos.pageY - offs[1]}px)`;
+    },
+    [ref],
+  );
+
+  const dragEnd = useCallback(() => {
+    if (!isGrabbing) return;
+
+    let i = closestIndex.current;
+
+    if (i !== undefined) {
+      if (i > index) i -= 1;
+
+      if (i !== index) {
+        onMove(i);
+      }
+    }
+
+    closestElement.current?.classList?.remove(hoverClassName);
+    if (ref.current) ref.current.style.transform = '';
+
+    closestElement.current = undefined;
+    closestIndex.current = undefined;
+
+    if (isMounted()) {
+      setIsGrabbing(false);
+    }
+  }, [isGrabbing, index, isMounted, onMove, ref, hoverClassName]);
+
   const mouseDown = (e: React.MouseEvent<HTMLElement>) => dragStart(e, e);
   const mouseMove = (e: React.MouseEvent<HTMLElement>) => dragMove(e, e);
-  const touchStart = (e: React.TouchEvent<HTMLElement>) => dragStart(e, e.touches[0]);
+  const touchStart = (e: React.TouchEvent<HTMLElement>) => dragStart(null, e.touches[0]);
   const touchMove = (e: React.TouchEvent<HTMLElement>) => dragMove(null, e.touches[0]);
 
   useEffect(() => {
