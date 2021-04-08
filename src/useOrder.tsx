@@ -144,6 +144,7 @@ export default function useOrder<T extends HTMLElement>({
       left: isGrabbing ? 0 : undefined,
       width: wrapperRef.current?.clientWidth,
       backfaceVisibility: 'hidden',
+      touchAction: 'none',
     },
   };
 }

@@ -186,6 +186,7 @@ function useOrder(_a) {
             left: isGrabbing ? 0 : undefined,
             width: (_b = wrapperRef.current) === null || _b === void 0 ? void 0 : _b.clientWidth,
             backfaceVisibility: 'hidden',
+            touchAction: 'none',
         },
     };
 }

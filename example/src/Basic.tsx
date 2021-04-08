@@ -5,7 +5,7 @@ export default function Basic() {
   const [list, setList] = useState(['first', 'second', 'third']);
 
   return (
-    <OrderGroup {...defaultTheme.group} style={{width: '500px'}}>
+    <OrderGroup {...defaultTheme.group} style={{width: '500px', maxWidth: '70vw'}}>
       {list.map((x, i) => (
         <OrderItem key={i}
                    index={i}
