@@ -15,6 +15,7 @@ interface IProps<T> {
   index: number;
   elementRef: React.MutableRefObject<T>;
   wrapperRef: React.MutableRefObject<HTMLElement>;
+  hoverClassName?: string;
 }
 
 export default function useOrder<T extends HTMLElement>({
@@ -22,6 +23,7 @@ export default function useOrder<T extends HTMLElement>({
   wrapperRef,
   index,
   onMove,
+  hoverClassName = 'hover',
 }: IProps<T>): IResult<T> {
   const [isGrabbing, setIsGrabbing] = useState(false);
   const [offset, setOffset] = useState([0, 0]);
@@ -59,13 +61,13 @@ export default function useOrder<T extends HTMLElement>({
       }
     }
 
-    closestElement.current?.classList?.remove('active');
+    closestElement.current?.classList?.remove(hoverClassName);
     if (ref.current) ref.current.style.transform = '';
 
     if (isMounted()) {
       setIsGrabbing(false);
     }
-  }, [isGrabbing, index, isMounted, onMove, ref]);
+  }, [isGrabbing, index, isMounted, onMove, ref, hoverClassName]);
 
   const mouseMove = useCallback(
     (e: React.MouseEvent<HTMLElement>) => {
@@ -85,16 +87,16 @@ export default function useOrder<T extends HTMLElement>({
           : prev;
       }, -1);
 
-      closestElement.current?.classList?.remove('active');
+      closestElement.current?.classList?.remove(hoverClassName);
 
       closestIndex.current = elementIndex;
       closestElement.current = others[elementIndex] as HTMLHRElement;
 
       if ((elementIndex > index ? elementIndex - 1 : elementIndex) !== index) {
-        closestElement.current?.classList?.add('active');
+        closestElement.current?.classList?.add(hoverClassName);
       }
     },
-    [isGrabbing, offset, ref, others, index],
+    [isGrabbing, offset, ref, others, index, hoverClassName],
   );
 
   useEffect(() => {

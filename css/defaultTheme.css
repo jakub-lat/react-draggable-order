@@ -1,0 +1,43 @@
+.rdo-group {
+}
+.rdo-group * {
+    box-sizing: border-box;
+}
+
+.rdo-wrapper {
+    height: 50px;
+    margin: 20px 0;
+    position: relative;
+}
+.rdo-hover::before {
+    content: '';
+    width: 100%;
+    display: block;
+    position: absolute;
+    top: -10px;
+    border-top: 2px solid black;
+}
+
+.rdo-item {
+    height: inherit;
+    width: 100%;
+    display: flex;
+    background: #eee;
+}
+.rdo-item-grabbing {
+    box-shadow: 0 0 15px 0 rgba(0,0,0,0.2);
+}
+
+.rdo-item-handle {
+    height: 50px;
+    width: 100px;
+    padding: 10px;
+    background-color: #ccc;
+    float: left;
+    cursor: grab;
+}
+
+.rdo-item-content {
+    padding: 10px;
+    flex: 1 0;
+}

@@ -1,3 +1,6 @@
 import OrderGroup from './OrderGroup';
 import useOrder from './useOrder';
-export { OrderGroup, useOrder };
+import OrderItem from './OrderItem';
+import * as defaultTheme from './defaultTheme';
+import { arrayMove } from './utils';
+export { OrderGroup, useOrder, OrderItem, defaultTheme, arrayMove };

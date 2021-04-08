@@ -1,91 +1,69 @@
-import React from 'react';
-import { OrderGroup, useOrder } from 'react-draggable-order';
+import React, { useState } from 'react';
+import { defaultTheme, OrderGroup, OrderItem, arrayMove } from 'react-draggable-order';
+import 'react-draggable-order/css/defaultTheme.css';
 import './style.css';
 
-interface IProps {
-  index: number;
-  data: any;
-  onMove: (i: number) => void;
-}
 
-function Container({ data, index, onMove }: IProps) {
-  const elementRef = React.useRef<HTMLDivElement>();
-  const wrapperRef = React.useRef<HTMLDivElement>();
-
-  const { mouseDown, mouseMove, isGrabbing, elementStyle } = useOrder({
-    elementRef,
-    wrapperRef,
-    index,
-    onMove,
-  });
+function Basic() {
+  const [list, setList] = useState(['first', 'second', 'third']);
 
   return (
-    <div ref={wrapperRef} className={'item'}>
-      <div
-        ref={elementRef}
-        style={{
-          ...elementStyle,
-          boxShadow: isGrabbing ? '0 0 15px 0px rgba(0,0,0,0.2)' : undefined,
-        }}
-        onMouseMove={mouseMove}
-      >
-        <div
-          style={{
-            height: '50px',
-            backgroundColor: data,
-          }}
+    <OrderGroup {...defaultTheme.group} style={{width: '500px'}}>
+      {list.map((x, i) => (
+        <OrderItem key={i}
+                   index={i}
+                   onMove={(to) => setList(arrayMove(list, i, to))}
+                   {...defaultTheme.item}
+
         >
-          <div
-            onMouseDown={mouseDown}
-            style={{
-              height: '50px',
-              width: '100px',
-              backgroundColor: 'yellow',
-              float: 'left',
-              cursor: 'grab',
-            }}
-          >
+          <OrderItem.Handle {...defaultTheme.handle}>
             grab me
+          </OrderItem.Handle>
+          <div {...defaultTheme.content}>
+            {x}
           </div>
-          {data}
-        </div>
-      </div>
-    </div>
+        </OrderItem>
+      ))}
+    </OrderGroup>
   );
 }
 
-export function arrayMove<T>(base: T[], from: number, to: number): T[] {
-  const arr = [...base];
-  arr.splice(to, 0, arr.splice(from, 1)[0]);
-  return arr;
+function Customized() {
+  const [list, setList] = useState(['#ee4343', '#6363f8', '#5cfa63']);
+
+  return <OrderGroup className={'group'}>
+    {list.map((x, i) => (
+      <OrderItem key={i}
+                 index={i}
+                 onMove={(to) => setList(arrayMove(list, i, to))}
+                 wrapperClassName={'wrapper'}
+                 className={'item'}
+                 hoverClassName={'hover'}
+                 grabbingClassName={'grabbing'}
+                 style={{ backgroundColor: x }}
+
+      >
+        <OrderItem.Handle className={'handle'}>
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
+          </svg>
+        </OrderItem.Handle>
+        <div className={'content'}>
+          {x}
+        </div>
+      </OrderItem>
+    ))}
+  </OrderGroup>;
 }
 
 function App() {
-  const [list, setList] = React.useState(['#ff0000', '#292af8', '#49f119']);
-
-  const sep = (i: number) => <hr className='my-2 condition-separator' key={`${i}_sep`} />;
-
-  return (
-    <div style={{ margin: '30px' }}>
-      <OrderGroup>
-        {list
-          .map((x, i) => (
-            <Container
-              key={x}
-              index={i}
-              data={x}
-              onMove={(to) => {
-                setList(arrayMove(list, i, to));
-              }}
-            />
-          ))
-          .reduce<React.ReactNodeArray>(
-            (acc, x, i) => (!acc ? [sep(i), x] : [...acc, sep(i), x]),
-            null,
-          )}
-      </OrderGroup>
-    </div>
-  );
+  return <div>
+    <h1>React draggable order example</h1>
+    <h2>Basic</h2>
+    <Basic />
+    <h2>Customized</h2>
+    <Customized />
+  </div>;
 }
 
 export default App;

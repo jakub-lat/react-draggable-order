@@ -20,3 +20,9 @@ export function pauseEvent(e) {
   e.returnValue = false;
   return false;
 }
+
+export function arrayMove<T>(base: T[], from: number, to: number): T[] {
+  const arr = [...base];
+  arr.splice(to, 0, arr.splice(from, 1)[0]);
+  return arr;
+}
