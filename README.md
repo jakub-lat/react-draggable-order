@@ -1,6 +1,9 @@
 # React Draggable Order
 
-Component for custom orderable list
+### Component for custom orderable list
+
+## Demo
+### Take a look [here](https://piratehacker.github.io/react-draggable-order) for a working demo.
 
 ## Basic usage
 
@@ -14,9 +17,7 @@ import { OrderGroup, OrderItem, defaultTheme } from 'react-draggable-order';
     <OrderItem key={i}
                index={i}
                onMove={(to) => setList(arrayMove(list, i, to))}
-               {...defaultTheme.item}
-
-    >
+               {...defaultTheme.item}>
       <OrderItem.Handle {...defaultTheme.handle}>
         grab me
       </OrderItem.Handle>
