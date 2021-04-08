@@ -1,12 +1,6 @@
 * {
     box-sizing: border-box;
-    font-family: Arial, sans-serif;
 }
-
-body {
-    margin: 50px 30px;
-}
-
 
 .wrapper {
     height: 40px;

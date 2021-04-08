@@ -28,5 +28,13 @@ import { OrderGroup, OrderItem, defaultTheme } from 'react-draggable-order';
 </OrderGroup>
 ```
 
-**See full usage [here](https://github.com/piratehacker/react-draggable-order/tree/master/example)**
+## How to style
 
+### [React component](https://github.com/piratehacker/react-draggable-order/tree/master/example/Customized.tsx)
+### [Example CSS](https://github.com/piratehacker/react-draggable-order/tree/master/example/customStyle.css)
+
+## Advanced usage (using useOrder hook)
+### [See here](https://github.com/piratehacker/react-draggable-order/tree/master/example)
+
+## Full example code
+### [See here](https://github.com/piratehacker/react-draggable-order/tree/master/example)
