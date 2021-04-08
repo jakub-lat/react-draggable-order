@@ -106,16 +106,16 @@ function useOrder(_a) {
     var closestElement = React.useRef();
     var isMounted = useIsMounted();
     var others = useContext(OrderGroupContext).others;
-    var mouseDown = useCallback(function (e) {
+    var dragStart = useCallback(function (e, pos) {
         setIsGrabbing(true);
         var offs = [
-            e.pageX - ref.current.getBoundingClientRect().left,
-            e.pageY - ref.current.getBoundingClientRect().top,
+            pos.pageX - ref.current.getBoundingClientRect().left,
+            pos.pageY - ref.current.getBoundingClientRect().top,
         ];
         setOffset(offs);
-        ref.current.style.transform = "translate(" + (e.pageX - offs[0]) + "px, " + (e.pageY - offs[1]) + "px)";
+        ref.current.style.transform = "translate(" + (pos.pageX - offs[0]) + "px, " + (pos.pageY - offs[1]) + "px)";
     }, [ref]);
-    var mouseUp = useCallback(function () {
+    var dragEnd = useCallback(function () {
         var _a, _b;
         if (!isGrabbing)
             return;
@@ -134,18 +134,19 @@ function useOrder(_a) {
             setIsGrabbing(false);
         }
     }, [isGrabbing, index, isMounted, onMove, ref, hoverClassName]);
-    var mouseMove = useCallback(function (e) {
+    var dragMove = useCallback(function (e, pos) {
         var _a, _b, _c, _d;
         if (!isGrabbing)
             return;
-        pauseEvent(e);
-        ref.current.style.transform = "translate(" + (e.pageX - offset[0]) + "px, " + (e.pageY - offset[1]) + "px)";
-        var elementIndex = others.reduce(function (prev, x, i) {
+        if (e)
+            pauseEvent(e);
+        ref.current.style.transform = "translate(" + (pos.pageX - offset[0]) + "px, " + (pos.pageY - offset[1]) + "px)";
+        var elementIndex = others.reduce(function (prev, el, i) {
             // eslint-disable-next-line no-nested-ternary
             return prev === -1
                 ? i
-                : Math.abs(x.getBoundingClientRect().top - e.clientY) <
-                    Math.abs(others[prev].getBoundingClientRect().top - e.clientY)
+                : Math.abs(el.getBoundingClientRect().top - pos.clientY) <
+                    Math.abs(others[prev].getBoundingClientRect().top - pos.clientY)
                     ? i
                     : prev;
         }, -1);
@@ -156,13 +157,19 @@ function useOrder(_a) {
             (_d = (_c = closestElement.current) === null || _c === void 0 ? void 0 : _c.classList) === null || _d === void 0 ? void 0 : _d.add(hoverClassName);
         }
     }, [isGrabbing, offset, ref, others, index, hoverClassName]);
+    var mouseDown = function (e) { return dragStart(e, e); };
+    var mouseMove = function (e) { return dragMove(e, e); };
+    var touchStart = function (e) { return dragStart(e, e.touches[0]); };
+    var touchMove = function (e) { return dragMove(null, e.touches[0]); };
     useEffect(function () {
-        window.addEventListener('mouseup', mouseUp);
+        window.addEventListener('mouseup', dragEnd);
+        window.addEventListener('touchend', dragEnd);
         wrapperRef.current.style.height = ref.current.offsetHeight + "px";
         wrapperRef.current.dataset[elementDataKey] = 'true';
         var wrapper = wrapperRef.current;
         return function () {
-            window.removeEventListener('mouseup', mouseUp);
+            window.removeEventListener('mouseup', dragEnd);
+            window.removeEventListener('touchend', dragEnd);
             delete wrapper.dataset[elementDataKey];
         };
     });
@@ -170,6 +177,8 @@ function useOrder(_a) {
         isGrabbing: isGrabbing,
         mouseDown: mouseDown,
         mouseMove: mouseMove,
+        touchStart: touchStart,
+        touchMove: touchMove,
         elementStyle: {
             zIndex: isGrabbing ? 100000 : 0,
             position: isGrabbing ? 'fixed' : undefined,
@@ -183,6 +192,7 @@ function useOrder(_a) {
 
 var OrderItemContext = createContext({
     mouseDown: function () { return null; },
+    touchStart: function () { return null; },
 });
 function OrderItem(_a) {
     var children = _a.children, index = _a.index, onMove = _a.onMove, style = _a.style, inactiveStyle = _a.inactiveStyle, grabbingStyle = _a.grabbingStyle, _b = _a.grabbingClassName, grabbingClassName = _b === void 0 ? '' : _b, _c = _a.wrapperClassName, wrapperClassName = _c === void 0 ? '' : _c, _d = _a.className, className = _d === void 0 ? '' : _d, hoverClassName = _a.hoverClassName;
@@ -194,20 +204,21 @@ function OrderItem(_a) {
         index: index,
         onMove: onMove,
         hoverClassName: hoverClassName,
-    }), mouseDown = _e.mouseDown, mouseMove = _e.mouseMove, isGrabbing = _e.isGrabbing, elementStyle = _e.elementStyle;
+    }), mouseDown = _e.mouseDown, mouseMove = _e.mouseMove, touchStart = _e.touchStart, touchMove = _e.touchMove, isGrabbing = _e.isGrabbing, elementStyle = _e.elementStyle;
     var context = useState({
         mouseDown: mouseDown,
+        touchStart: touchStart,
     })[0];
     return (React.createElement("div", { ref: wrapperRef, className: wrapperClassName },
-        React.createElement("div", { ref: elementRef, className: className + (isGrabbing ? " " + grabbingClassName : ''), style: __assign(__assign(__assign({}, elementStyle), style), (isGrabbing ? grabbingStyle : inactiveStyle)), onMouseMove: mouseMove },
+        React.createElement("div", { ref: elementRef, className: className + (isGrabbing ? " " + grabbingClassName : ''), style: __assign(__assign(__assign({}, elementStyle), style), (isGrabbing ? grabbingStyle : inactiveStyle)), onMouseMove: mouseMove, onTouchMove: touchMove },
             React.createElement(OrderItemContext.Provider, { value: context }, children))));
 }
 OrderItem.Handle = function OrderItemHandle(_a) {
     var children = _a.children, props = __rest(_a, ["children"]);
-    var mouseDown = useContext(OrderItemContext).mouseDown;
+    var _b = useContext(OrderItemContext), mouseDown = _b.mouseDown, touchStart = _b.touchStart;
     return (
     // eslint-disable-next-line jsx-a11y/no-static-element-interactions
-    React.createElement("div", __assign({ onMouseDown: mouseDown }, props), children));
+    React.createElement("div", __assign({ onMouseDown: mouseDown, onTouchStart: touchStart }, props), children));
 };
 
 function styleInject(css, ref) {

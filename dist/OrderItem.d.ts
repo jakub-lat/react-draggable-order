@@ -12,7 +12,8 @@ export interface IProps {
     hoverClassName?: string;
 }
 export interface IOrderItemContext {
-    mouseDown: (e: React.MouseEvent<Element, MouseEvent>) => void;
+    mouseDown: (e: React.MouseEvent<HTMLElement, MouseEvent>) => void;
+    touchStart: (e: React.TouchEvent<HTMLDivElement>) => void;
 }
 export declare const OrderItemContext: React.Context<IOrderItemContext>;
 declare function OrderItem({ children, index, onMove, style, inactiveStyle, grabbingStyle, grabbingClassName, wrapperClassName, className, hoverClassName, }: PropsWithChildren<IProps>): JSX.Element;

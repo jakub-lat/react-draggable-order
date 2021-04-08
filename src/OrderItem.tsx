@@ -24,11 +24,13 @@ export interface IProps {
 }
 
 export interface IOrderItemContext {
-  mouseDown: (e: React.MouseEvent<Element, MouseEvent>) => void;
+  mouseDown: (e: React.MouseEvent<HTMLElement, MouseEvent>) => void;
+  touchStart: (e: React.TouchEvent<HTMLDivElement>) => void;
 }
 
 export const OrderItemContext = createContext<IOrderItemContext>({
   mouseDown: () => null,
+  touchStart: () => null,
 });
 
 export default function OrderItem({
@@ -46,7 +48,7 @@ export default function OrderItem({
   const elementRef = useRef<HTMLDivElement>() as MutableRefObject<HTMLDivElement>;
   const wrapperRef = useRef<HTMLDivElement>() as MutableRefObject<HTMLDivElement>;
 
-  const { mouseDown, mouseMove, isGrabbing, elementStyle } = useOrder({
+  const { mouseDown, mouseMove, touchStart, touchMove, isGrabbing, elementStyle } = useOrder({
     elementRef,
     wrapperRef,
     index,
@@ -56,6 +58,7 @@ export default function OrderItem({
 
   const [context] = useState<IOrderItemContext>({
     mouseDown,
+    touchStart,
   });
 
   return (
@@ -69,6 +72,7 @@ export default function OrderItem({
           ...(isGrabbing ? grabbingStyle : inactiveStyle),
         }}
         onMouseMove={mouseMove}
+        onTouchMove={touchMove}
       >
         <OrderItemContext.Provider value={context}>{children}</OrderItemContext.Provider>
       </div>
@@ -80,11 +84,11 @@ OrderItem.Handle = function OrderItemHandle({
   children,
   ...props
 }: PropsWithChildren<HTMLAttributes<HTMLDivElement>>) {
-  const { mouseDown } = useContext(OrderItemContext);
+  const { mouseDown, touchStart } = useContext(OrderItemContext);
 
   return (
     // eslint-disable-next-line jsx-a11y/no-static-element-interactions
-    <div onMouseDown={mouseDown} {...props}>
+    <div onMouseDown={mouseDown} onTouchStart={touchStart} {...props}>
       {children}
     </div>
   );

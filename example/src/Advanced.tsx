@@ -1,5 +1,5 @@
 import React, { MutableRefObject, useRef, useState } from 'react';
-import { OrderGroup, useOrder, arrayMove } from 'react-draggable-order';
+import { arrayMove, OrderGroup, useOrder } from 'react-draggable-order';
 
 interface IProps {
   index: number;
@@ -7,11 +7,11 @@ interface IProps {
   onMove: (to: number) => void;
 }
 
-function Item({data, index, onMove}: IProps) {
+function Item({ data, index, onMove }: IProps) {
   const elementRef = useRef<HTMLDivElement>() as MutableRefObject<HTMLDivElement>;
   const wrapperRef = useRef<HTMLDivElement>() as MutableRefObject<HTMLDivElement>;
 
-  const { mouseDown, mouseMove, isGrabbing, elementStyle } = useOrder({
+  const { mouseDown, mouseMove, touchStart, touchMove, isGrabbing, elementStyle } = useOrder({
     elementRef,
     wrapperRef,
     index,
@@ -29,10 +29,12 @@ function Item({data, index, onMove}: IProps) {
           backgroundColor: data,
         }}
         onMouseMove={mouseMove}
+        onTouchMove={touchMove}
       >
-        <div className={'handle'} onMouseDown={mouseDown}>
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
+        <div className={'handle'} onMouseDown={mouseDown} onTouchStart={touchStart}>
+          <svg xmlns='http://www.w3.org/2000/svg' className='h-6 w-6' fill='none' viewBox='0 0 24 24'
+               stroke='currentColor'>
+            <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M4 8h16M4 16h16' />
           </svg>
         </div>
         <div className={'content'}>
@@ -48,7 +50,7 @@ export default function Advanced() {
 
   return <OrderGroup>
     {list.map((x, i) =>
-      <Item index={i} data={x} onMove={(to) => setList(arrayMove(list, i, to))} />
-      )}
-  </OrderGroup>
+      <Item key={i} index={i} data={x} onMove={(to) => setList(arrayMove(list, i, to))} />,
+    )}
+  </OrderGroup>;
 }

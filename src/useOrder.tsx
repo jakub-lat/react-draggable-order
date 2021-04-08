@@ -5,9 +5,11 @@ import { pauseEvent, useIsMounted } from './utils';
 
 interface IResult<T> {
   isGrabbing: boolean;
-  mouseDown: (e: React.MouseEvent) => void;
-  mouseMove: (e: React.MouseEvent<HTMLElement>) => void;
   elementStyle: React.HTMLAttributes<T>['style'];
+  mouseDown: (e: React.MouseEvent<HTMLElement>) => void;
+  mouseMove: (e: React.MouseEvent<HTMLElement>) => void;
+  touchStart: (e: React.TouchEvent<HTMLElement>) => void;
+  touchMove: (e: React.TouchEvent<HTMLElement>) => void;
 }
 
 interface IProps<T> {
@@ -16,6 +18,13 @@ interface IProps<T> {
   elementRef: React.MutableRefObject<T>;
   wrapperRef: React.MutableRefObject<HTMLElement>;
   hoverClassName?: string;
+}
+
+interface Pos {
+  pageX: number;
+  pageY: number;
+  clientX: number;
+  clientY: number;
 }
 
 export default function useOrder<T extends HTMLElement>({
@@ -34,21 +43,21 @@ export default function useOrder<T extends HTMLElement>({
   const isMounted = useIsMounted();
   const { others } = useContext(OrderGroupContext);
 
-  const mouseDown = useCallback(
-    (e: React.MouseEvent) => {
+  const dragStart = useCallback(
+    (e, pos: Pos) => {
       setIsGrabbing(true);
 
       const offs = [
-        e.pageX - ref.current.getBoundingClientRect().left,
-        e.pageY - ref.current.getBoundingClientRect().top,
+        pos.pageX - ref.current.getBoundingClientRect().left,
+        pos.pageY - ref.current.getBoundingClientRect().top,
       ];
       setOffset(offs);
-      ref.current.style.transform = `translate(${e.pageX - offs[0]}px, ${e.pageY - offs[1]}px)`;
+      ref.current.style.transform = `translate(${pos.pageX - offs[0]}px, ${pos.pageY - offs[1]}px)`;
     },
     [ref],
   );
 
-  const mouseUp = useCallback(() => {
+  const dragEnd = useCallback(() => {
     if (!isGrabbing) return;
 
     let i = closestIndex.current;
@@ -69,20 +78,22 @@ export default function useOrder<T extends HTMLElement>({
     }
   }, [isGrabbing, index, isMounted, onMove, ref, hoverClassName]);
 
-  const mouseMove = useCallback(
-    (e: React.MouseEvent<HTMLElement>) => {
+  const dragMove = useCallback(
+    (e, pos: Pos) => {
       if (!isGrabbing) return;
 
-      pauseEvent(e);
+      if (e) pauseEvent(e);
 
-      ref.current.style.transform = `translate(${e.pageX - offset[0]}px, ${e.pageY - offset[1]}px)`;
+      ref.current.style.transform = `translate(${pos.pageX - offset[0]}px, ${
+        pos.pageY - offset[1]
+      }px)`;
 
-      const elementIndex = others.reduce((prev, x, i) => {
+      const elementIndex = others.reduce((prev, el, i) => {
         // eslint-disable-next-line no-nested-ternary
         return prev === -1
           ? i
-          : Math.abs(x.getBoundingClientRect().top - e.clientY) <
-            Math.abs(others[prev].getBoundingClientRect().top - e.clientY)
+          : Math.abs(el.getBoundingClientRect().top - pos.clientY) <
+            Math.abs(others[prev].getBoundingClientRect().top - pos.clientY)
           ? i
           : prev;
       }, -1);
@@ -99,8 +110,14 @@ export default function useOrder<T extends HTMLElement>({
     [isGrabbing, offset, ref, others, index, hoverClassName],
   );
 
+  const mouseDown = (e: React.MouseEvent<HTMLElement>) => dragStart(e, e);
+  const mouseMove = (e: React.MouseEvent<HTMLElement>) => dragMove(e, e);
+  const touchStart = (e: React.TouchEvent<HTMLElement>) => dragStart(e, e.touches[0]);
+  const touchMove = (e: React.TouchEvent<HTMLElement>) => dragMove(null, e.touches[0]);
+
   useEffect(() => {
-    window.addEventListener('mouseup', mouseUp);
+    window.addEventListener('mouseup', dragEnd);
+    window.addEventListener('touchend', dragEnd);
 
     wrapperRef.current.style.height = `${ref.current.offsetHeight}px`;
     wrapperRef.current.dataset[elementDataKey] = 'true';
@@ -108,7 +125,8 @@ export default function useOrder<T extends HTMLElement>({
     const wrapper = wrapperRef.current;
 
     return () => {
-      window.removeEventListener('mouseup', mouseUp);
+      window.removeEventListener('mouseup', dragEnd);
+      window.removeEventListener('touchend', dragEnd);
       delete wrapper.dataset[elementDataKey];
     };
   });
@@ -117,6 +135,8 @@ export default function useOrder<T extends HTMLElement>({
     isGrabbing,
     mouseDown,
     mouseMove,
+    touchStart,
+    touchMove,
     elementStyle: {
       zIndex: isGrabbing ? 100000 : 0,
       position: isGrabbing ? 'fixed' : undefined,

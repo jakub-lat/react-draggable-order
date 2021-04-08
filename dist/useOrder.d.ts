@@ -1,9 +1,11 @@
 import React from 'react';
 interface IResult<T> {
     isGrabbing: boolean;
-    mouseDown: (e: React.MouseEvent) => void;
-    mouseMove: (e: React.MouseEvent<HTMLElement>) => void;
     elementStyle: React.HTMLAttributes<T>['style'];
+    mouseDown: (e: React.MouseEvent<HTMLElement>) => void;
+    mouseMove: (e: React.MouseEvent<HTMLElement>) => void;
+    touchStart: (e: React.TouchEvent<HTMLElement>) => void;
+    touchMove: (e: React.TouchEvent<HTMLElement>) => void;
 }
 interface IProps<T> {
     onMove: (i: number) => void;
