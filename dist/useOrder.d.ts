@@ -12,5 +12,4 @@ interface IProps<T> {
     wrapperRef: React.MutableRefObject<HTMLElement>;
 }
 export default function useOrder<T extends HTMLElement>({ elementRef: ref, wrapperRef, index, onMove, }: IProps<T>): IResult<T>;
-export declare const useIsMounted: () => () => any;
 export {};

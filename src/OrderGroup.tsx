@@ -1,6 +1,4 @@
-import React, { useEffect, useState } from 'react';
-
-interface IProps {}
+import React, { useEffect, useRef, useState } from 'react';
 
 interface IContext {
   others: HTMLElement[];
@@ -11,22 +9,23 @@ export const OrderGroupContext = React.createContext<IContext>({
 
 export const elementDataKey = 'orderableElement';
 
-export default function OrderGroup({ children }: React.PropsWithChildren<IProps>) {
-  const ref = React.useRef<HTMLDivElement>();
+export default function OrderGroup({ children }: React.PropsWithChildren<any>) {
+  const ref = useRef<HTMLDivElement>() as React.MutableRefObject<HTMLDivElement>;
+
   const [value, setValue] = useState<IContext>({
-    others: ref?.current?.childNodes ? Array.from(ref.current.childNodes).map((x) => x as HTMLElement) : [],
+    others: ref?.current?.childNodes
+      ? Array.from(ref.current.childNodes).map((x) => x as HTMLElement)
+      : [],
   });
 
   useEffect(() => {
-    setValue({
-      ...value,
-      get others() {
-        return Array.from(ref.current.childNodes)
-          .map((x) => x as HTMLElement)
-          .filter((x) => !!x.dataset[elementDataKey]);
-      },
-    });
-  }, [ref.current]);
+    setValue((prev) => ({
+      ...prev,
+      others: Array.from(ref?.current?.childNodes || [])
+        .map((x) => x as HTMLElement)
+        .filter((x) => !!x.dataset[elementDataKey]),
+    }));
+  }, [children]);
 
   return (
     <OrderGroupContext.Provider value={value}>

@@ -1,5 +1,7 @@
-import React, { useCallback, useEffect, useState, useContext, useRef } from 'react';
-import { OrderGroupContext, elementDataKey } from './OrderGroup';
+/* eslint-disable no-param-reassign */
+import React, { useCallback, useContext, useEffect, useState } from 'react';
+import { elementDataKey, OrderGroupContext } from './OrderGroup';
+import { pauseEvent, useIsMounted } from './utils';
 
 interface IResult<T> {
   isGrabbing: boolean;
@@ -30,32 +32,40 @@ export default function useOrder<T extends HTMLElement>({
   const isMounted = useIsMounted();
   const { others } = useContext(OrderGroupContext);
 
-  const mouseDown = useCallback((e: React.MouseEvent) => {
-    setIsGrabbing(true);
+  const mouseDown = useCallback(
+    (e: React.MouseEvent) => {
+      setIsGrabbing(true);
 
-    const offs = [
-      e.pageX - ref.current.getBoundingClientRect().left,
-      e.pageY - ref.current.getBoundingClientRect().top,
-    ];
-    setOffset(offs);
-    ref.current.style.transform = `translate(${e.pageX - offs[0]}px, ${e.pageY - offs[1]}px)`;
-  }, []);
+      const offs = [
+        e.pageX - ref.current.getBoundingClientRect().left,
+        e.pageY - ref.current.getBoundingClientRect().top,
+      ];
+      setOffset(offs);
+      ref.current.style.transform = `translate(${e.pageX - offs[0]}px, ${e.pageY - offs[1]}px)`;
+    },
+    [ref],
+  );
 
   const mouseUp = useCallback(() => {
     if (!isGrabbing) return;
 
-    const i = closestIndex.current;
-    if (i !== null && i !== index) {
-      onMove(i > index ? i - 1 : i);
+    let i = closestIndex.current;
+
+    if (i !== null) {
+      if (i > index) i -= 1;
+
+      if (i !== index) {
+        onMove(i);
+      }
     }
 
     closestElement.current?.classList?.remove('active');
     if (ref.current) ref.current.style.transform = '';
 
-    if (isMounted) {
+    if (isMounted()) {
       setIsGrabbing(false);
     }
-  }, [isGrabbing, isMounted()]);
+  }, [isGrabbing, index, isMounted, onMove, ref]);
 
   const mouseMove = useCallback(
     (e: React.MouseEvent<HTMLElement>) => {
@@ -65,10 +75,11 @@ export default function useOrder<T extends HTMLElement>({
 
       ref.current.style.transform = `translate(${e.pageX - offset[0]}px, ${e.pageY - offset[1]}px)`;
 
-      const i = others.reduce((prev, curr, i) => {
+      const elementIndex = others.reduce((prev, x, i) => {
+        // eslint-disable-next-line no-nested-ternary
         return prev === -1
           ? i
-          : Math.abs(curr.getBoundingClientRect().top - e.clientY) <
+          : Math.abs(x.getBoundingClientRect().top - e.clientY) <
             Math.abs(others[prev].getBoundingClientRect().top - e.clientY)
           ? i
           : prev;
@@ -76,25 +87,27 @@ export default function useOrder<T extends HTMLElement>({
 
       closestElement.current?.classList?.remove('active');
 
-      closestIndex.current = i;
-      closestElement.current = others[i] as HTMLHRElement;
+      closestIndex.current = elementIndex;
+      closestElement.current = others[elementIndex] as HTMLHRElement;
 
-      if (closestIndex.current !== index) {
+      if ((elementIndex > index ? elementIndex - 1 : elementIndex) !== index) {
         closestElement.current?.classList?.add('active');
       }
     },
-    [isGrabbing],
+    [isGrabbing, offset, ref, others, index],
   );
 
   useEffect(() => {
     window.addEventListener('mouseup', mouseUp);
 
-    wrapperRef.current.style.height = ref.current.offsetHeight + 'px';
+    wrapperRef.current.style.height = `${ref.current.offsetHeight}px`;
     wrapperRef.current.dataset[elementDataKey] = 'true';
+
+    const wrapper = wrapperRef.current;
 
     return () => {
       window.removeEventListener('mouseup', mouseUp);
-      delete wrapperRef.current.dataset[elementDataKey];
+      delete wrapper.dataset[elementDataKey];
     };
   });
 
@@ -112,24 +125,3 @@ export default function useOrder<T extends HTMLElement>({
     },
   };
 }
-
-function pauseEvent(e) {
-  if (e.stopPropagation) e.stopPropagation();
-  if (e.preventDefault) e.preventDefault();
-  e.cancelBubble = true;
-  e.returnValue = false;
-  return false;
-}
-
-export const useIsMounted = () => {
-  const ref = useRef(false);
-  const [, setIsMounted] = useState(false);
-  useEffect(() => {
-    ref.current = true;
-    setIsMounted(true);
-    return () => {
-      ref.current = false;
-    };
-  }, []);
-  return () => ref.current;
-};
