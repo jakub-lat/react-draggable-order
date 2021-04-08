@@ -3,7 +3,7 @@
 **Component for custom orderable list**
 
 ## Demo
-**Take a look [here](https://piratehacker.github.io/react-draggable-order) for a working demo.*
+**Take a look [here](https://piratehacker.github.io/react-draggable-order) for a working demo.**
 
 ## Basic usage
 
