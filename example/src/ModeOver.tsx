@@ -2,16 +2,18 @@ import React, { useState } from 'react';
 import { OrderGroup, OrderItem, arrayMove } from 'react-draggable-order';
 import './customStyle.css';
 
-export default function Customized() {
+export default function MoveOver() {
   const [list, setList] = useState(['#ee4343', '#6363f8', '#5cfa63']);
 
-  return <OrderGroup className={'group'} mode={'between'}>
+  return <OrderGroup className={'group'} mode={'over'}>
     {list.map((x, i) => (
       <OrderItem key={i}
                  index={i}
                  onMove={(to) => setList(arrayMove(list, i, to))}
                  wrapperClassName={'wrapper'}
-                 wrapperHoverClassName={'hover'}
+                 wrapperHoverStyle={{
+                   boxShadow: '0 0 0 2px #333'
+                 }}
                  className={'item'}
                  grabbingClassName={'grabbing'}
                  style={{ backgroundColor: x }}

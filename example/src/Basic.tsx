@@ -11,7 +11,6 @@ export default function Basic() {
                    index={i}
                    onMove={(to) => setList(arrayMove(list, i, to))}
                    {...defaultTheme.item}
-
         >
           <OrderItem.Handle {...defaultTheme.handle}>
             grab me

@@ -1,10 +1,11 @@
 /* eslint-disable no-param-reassign */
 import React, { useCallback, useContext, useEffect, useState } from 'react';
-import { elementDataKey, OrderGroupContext } from './OrderGroup';
+import { elementDataKey, OrderGroupConfig, OrderGroupContext } from './OrderGroup';
 import { pauseEvent, useIsMounted } from './utils';
 
 interface IResult<T> {
   isGrabbing: boolean;
+  isHover: boolean;
   elementStyle: React.HTMLAttributes<T>['style'];
   mouseDown: (e: React.MouseEvent<HTMLElement>) => void;
   mouseMove: (e: React.MouseEvent<HTMLElement>) => void;
@@ -17,7 +18,6 @@ interface IProps<T> {
   index: number;
   elementRef: React.MutableRefObject<T>;
   wrapperRef: React.MutableRefObject<HTMLElement>;
-  hoverClassName?: string;
 }
 
 interface Pos {
@@ -27,21 +27,30 @@ interface Pos {
   clientY: number;
 }
 
+const calculateDistance = (config: OrderGroupConfig) => (el: HTMLElement, pos: Pos): number => {
+  if (config.mode === 'between') {
+    return Math.abs(el.getBoundingClientRect().top - pos.clientY);
+  }
+
+  const half = el.getBoundingClientRect().height;
+  return Math.abs(el.getBoundingClientRect().top + half - pos.clientY);
+};
+
 export default function useOrder<T extends HTMLElement>({
   elementRef: ref,
   wrapperRef,
   index,
   onMove,
-  hoverClassName = 'hover',
 }: IProps<T>): IResult<T> {
   const [isGrabbing, setIsGrabbing] = useState(false);
   const [offset, setOffset] = useState([0, 0]);
 
   const closestIndex = React.useRef<number>();
-  const closestElement = React.useRef<HTMLElement>();
 
   const isMounted = useIsMounted();
-  const { others } = useContext(OrderGroupContext);
+  const { others, hoveredIndex, setHoveredIndex, config } = useContext(OrderGroupContext);
+
+  const calcDist = calculateDistance(config);
 
   const dragMove = useCallback(
     (e, pos: Pos) => {
@@ -54,25 +63,24 @@ export default function useOrder<T extends HTMLElement>({
       }px)`;
 
       const elementIndex = others.reduce((prev, el, i) => {
-        // eslint-disable-next-line no-nested-ternary
-        return prev === -1
-          ? i
-          : Math.abs(el.getBoundingClientRect().top - pos.clientY) <
-            Math.abs(others[prev].getBoundingClientRect().top - pos.clientY)
-          ? i
-          : prev;
+        if (prev === -1) return i;
+        return calcDist(el, pos) < calcDist(others[prev], pos) ? i : prev;
       }, -1);
 
-      closestElement.current?.classList?.remove(hoverClassName);
-
       closestIndex.current = elementIndex;
-      closestElement.current = others[elementIndex] as HTMLElement;
 
-      if ((elementIndex > index ? elementIndex - 1 : elementIndex) !== index) {
-        closestElement.current?.classList?.add(hoverClassName);
+      if (
+        config.mode === 'between' &&
+        (elementIndex > index ? elementIndex - 1 : elementIndex) !== index
+      ) {
+        setHoveredIndex(elementIndex);
+      } else if (config.mode !== 'between' && elementIndex !== index) {
+        setHoveredIndex(elementIndex);
+      } else {
+        setHoveredIndex(undefined);
       }
     },
-    [isGrabbing, offset, ref, others, index, hoverClassName],
+    [isGrabbing, offset, ref, others, index, setHoveredIndex, config.mode, calcDist],
   );
 
   const dragStart = useCallback(
@@ -97,23 +105,23 @@ export default function useOrder<T extends HTMLElement>({
     let i = closestIndex.current;
 
     if (i !== undefined) {
-      if (i > index) i -= 1;
+      if (config.mode === 'between' && i > index) i -= 1;
 
       if (i !== index) {
         onMove(i);
       }
     }
 
-    closestElement.current?.classList?.remove(hoverClassName);
+    // closestElement.current?.classList?.remove(hoverClassName);
     if (ref.current) ref.current.style.transform = '';
 
-    closestElement.current = undefined;
     closestIndex.current = undefined;
+    setHoveredIndex(undefined);
 
     if (isMounted()) {
       setIsGrabbing(false);
     }
-  }, [isGrabbing, index, isMounted, onMove, ref, hoverClassName]);
+  }, [isGrabbing, index, isMounted, onMove, ref, setHoveredIndex, config.mode]);
 
   const mouseDown = (e: React.MouseEvent<HTMLElement>) => dragStart(e, e);
   const mouseMove = (e: React.MouseEvent<HTMLElement>) => dragMove(e, e);
@@ -138,6 +146,7 @@ export default function useOrder<T extends HTMLElement>({
 
   return {
     isGrabbing,
+    isHover: hoveredIndex === index,
     mouseDown,
     mouseMove,
     touchStart,

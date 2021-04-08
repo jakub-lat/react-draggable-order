@@ -32,9 +32,9 @@ import { OrderGroup, OrderItem, defaultTheme } from 'react-draggable-order';
 
 ## How to style
 
-[React component](https://github.com/piratehacker/react-draggable-order/blob/master/example/Customized.tsx)
+[React component](https://github.com/piratehacker/react-draggable-order/blob/master/example/src/Customized.tsx)
 
-[Example CSS](https://github.com/piratehacker/react-draggable-order/blob/master/example/customStyle.css)
+[Example CSS](https://github.com/piratehacker/react-draggable-order/blob/master/example/src/customStyle.css)
 
 ## Advanced usage (using useOrder hook)
 

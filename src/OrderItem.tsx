@@ -8,19 +8,28 @@ import React, {
   useRef,
   useState,
 } from 'react';
+import classNames from 'classnames';
 import useOrder from './useOrder';
 
 export interface IProps {
   index: number;
   onMove: (i: number) => void;
-  style?: CSSProperties;
-  inactiveStyle?: CSSProperties;
-  grabbingStyle?: CSSProperties;
+
   wrapperClassName?: string;
+  wrapperHoverClassName?: string;
+  wrapperStyle?: CSSProperties;
+  wrapperHoverStyle?: CSSProperties;
+
   className?: string;
+  style?: CSSProperties;
+
+  hoverStyle?: CSSProperties;
+  hoverClassName?: string;
+
   inactiveClassName?: string;
   grabbingClassName?: string;
-  hoverClassName?: string;
+  inactiveStyle?: CSSProperties;
+  grabbingStyle?: CSSProperties;
 }
 
 export interface IOrderItemContext {
@@ -38,22 +47,35 @@ export default function OrderItem({
   index,
   onMove,
   style,
-  inactiveStyle,
-  grabbingStyle,
-  grabbingClassName = '',
   wrapperClassName = '',
+  wrapperHoverClassName = '',
+  wrapperStyle = {},
+  wrapperHoverStyle = {},
+
   className = '',
-  hoverClassName,
+  inactiveStyle = {},
+  grabbingStyle = {},
+  inactiveClassName = '',
+  grabbingClassName = '',
+  hoverClassName = '',
+  hoverStyle = {},
 }: PropsWithChildren<IProps>) {
   const elementRef = useRef<HTMLDivElement>() as MutableRefObject<HTMLDivElement>;
   const wrapperRef = useRef<HTMLDivElement>() as MutableRefObject<HTMLDivElement>;
 
-  const { mouseDown, mouseMove, touchStart, touchMove, isGrabbing, elementStyle } = useOrder({
+  const {
+    mouseDown,
+    mouseMove,
+    touchStart,
+    touchMove,
+    isGrabbing,
+    isHover,
+    elementStyle,
+  } = useOrder({
     elementRef,
     wrapperRef,
     index,
     onMove,
-    hoverClassName,
   });
 
   const [context] = useState<IOrderItemContext>({
@@ -62,14 +84,24 @@ export default function OrderItem({
   });
 
   return (
-    <div ref={wrapperRef} className={wrapperClassName}>
+    <div
+      ref={wrapperRef}
+      className={classNames(wrapperClassName, isHover && wrapperHoverClassName)}
+      style={{ ...wrapperStyle, ...(isHover ? wrapperHoverStyle : {}) }}
+    >
       <div
         ref={elementRef}
-        className={className + (isGrabbing ? ` ${grabbingClassName}` : '')}
+        className={classNames(
+          className,
+          isGrabbing && grabbingClassName,
+          !isGrabbing && inactiveClassName,
+          isHover && hoverClassName,
+        )}
         style={{
           ...elementStyle,
           ...style,
           ...(isGrabbing ? grabbingStyle : inactiveStyle),
+          ...(isHover ? hoverStyle : {}),
         }}
         onMouseMove={mouseMove}
         onTouchMove={touchMove}

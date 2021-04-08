@@ -4,6 +4,7 @@ import './customStyle.css';
 import Basic from './Basic';
 import Customized from './Customized';
 import Advanced from './Advanced';
+import ModeOver from './ModeOver';
 
 function App() {
   return <div>
@@ -12,6 +13,8 @@ function App() {
     <Basic />
     <h2>Customized</h2>
     <Customized />
+    <h2>Different hover effect</h2>
+    <ModeOver />
     <h2>Advanced (using hooks)</h2>
     <Advanced />
   </div>;

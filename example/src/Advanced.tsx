@@ -11,16 +11,15 @@ function Item({ data, index, onMove }: IProps) {
   const elementRef = useRef<HTMLDivElement>() as MutableRefObject<HTMLDivElement>;
   const wrapperRef = useRef<HTMLDivElement>() as MutableRefObject<HTMLDivElement>;
 
-  const { mouseDown, mouseMove, touchStart, touchMove, isGrabbing, elementStyle } = useOrder({
+  const { mouseDown, mouseMove, touchStart, touchMove, isGrabbing, isHover, elementStyle } = useOrder({
     elementRef,
     wrapperRef,
     index,
     onMove,
-    hoverClassName: 'hover',
   });
 
   return (
-    <div ref={wrapperRef} className={'wrapper'}>
+    <div ref={wrapperRef} className={'wrapper' + (isHover ? ' hover' : '')}>
       <div
         ref={elementRef}
         className={'item' + (isGrabbing ? ' grabbing' : '')}
@@ -48,7 +47,7 @@ function Item({ data, index, onMove }: IProps) {
 export default function Advanced() {
   const [list, setList] = useState(['#ee4343', '#6363f8', '#5cfa63']);
 
-  return <OrderGroup>
+  return <OrderGroup mode={'between'}>
     {list.map((x, i) =>
       <Item key={i} index={i} data={x} onMove={(to) => setList(arrayMove(list, i, to))} />,
     )}

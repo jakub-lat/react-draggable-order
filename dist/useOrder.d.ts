@@ -1,6 +1,7 @@
 import React from 'react';
 interface IResult<T> {
     isGrabbing: boolean;
+    isHover: boolean;
     elementStyle: React.HTMLAttributes<T>['style'];
     mouseDown: (e: React.MouseEvent<HTMLElement>) => void;
     mouseMove: (e: React.MouseEvent<HTMLElement>) => void;
@@ -12,7 +13,6 @@ interface IProps<T> {
     index: number;
     elementRef: React.MutableRefObject<T>;
     wrapperRef: React.MutableRefObject<HTMLElement>;
-    hoverClassName?: string;
 }
-export default function useOrder<T extends HTMLElement>({ elementRef: ref, wrapperRef, index, onMove, hoverClassName, }: IProps<T>): IResult<T>;
+export default function useOrder<T extends HTMLElement>({ elementRef: ref, wrapperRef, index, onMove, }: IProps<T>): IResult<T>;
 export {};

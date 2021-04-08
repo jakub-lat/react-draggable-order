@@ -54,17 +54,25 @@ function __spreadArray(to, from) {
 
 var OrderGroupContext = React__default['default'].createContext({
     others: [],
+    setHoveredIndex: function () { return null; },
+    config: {
+        mode: 'between',
+    },
 });
 var elementDataKey = 'orderableElement';
 function OrderGroup(_a) {
     var _b;
-    var children = _a.children, props = __rest(_a, ["children"]);
+    var children = _a.children, _c = _a.mode, mode = _c === void 0 ? 'between' : _c, props = __rest(_a, ["children", "mode"]);
     var ref = React.useRef();
-    var _c = React.useState({
+    var _d = React.useState({
         others: ((_b = ref === null || ref === void 0 ? void 0 : ref.current) === null || _b === void 0 ? void 0 : _b.childNodes)
             ? Array.from(ref.current.childNodes).map(function (x) { return x; })
             : [],
-    }), value = _c[0], setValue = _c[1];
+        setHoveredIndex: function (i) { return setValue(function (p) { return (__assign(__assign({}, p), { hoveredIndex: i })); }); },
+        config: {
+            mode: mode,
+        },
+    }), value = _d[0], setValue = _d[1];
     React.useEffect(function () {
         setValue(function (prev) {
             var _a;
@@ -105,38 +113,45 @@ function arrayMove(base, from, to) {
 }
 
 /* eslint-disable no-param-reassign */
+var calculateDistance = function (config) { return function (el, pos) {
+    if (config.mode === 'between') {
+        return Math.abs(el.getBoundingClientRect().top - pos.clientY);
+    }
+    var half = el.getBoundingClientRect().height;
+    return Math.abs(el.getBoundingClientRect().top + half - pos.clientY);
+}; };
 function useOrder(_a) {
     var _b;
-    var ref = _a.elementRef, wrapperRef = _a.wrapperRef, index = _a.index, onMove = _a.onMove, _c = _a.hoverClassName, hoverClassName = _c === void 0 ? 'hover' : _c;
-    var _d = React.useState(false), isGrabbing = _d[0], setIsGrabbing = _d[1];
-    var _e = React.useState([0, 0]), offset = _e[0], setOffset = _e[1];
+    var ref = _a.elementRef, wrapperRef = _a.wrapperRef, index = _a.index, onMove = _a.onMove;
+    var _c = React.useState(false), isGrabbing = _c[0], setIsGrabbing = _c[1];
+    var _d = React.useState([0, 0]), offset = _d[0], setOffset = _d[1];
     var closestIndex = React__default['default'].useRef();
-    var closestElement = React__default['default'].useRef();
     var isMounted = useIsMounted();
-    var others = React.useContext(OrderGroupContext).others;
+    var _e = React.useContext(OrderGroupContext), others = _e.others, hoveredIndex = _e.hoveredIndex, setHoveredIndex = _e.setHoveredIndex, config = _e.config;
+    var calcDist = calculateDistance(config);
     var dragMove = React.useCallback(function (e, pos) {
-        var _a, _b, _c, _d;
         if (!isGrabbing)
             return;
         if (e)
             pauseEvent(e);
         ref.current.style.transform = "translate(" + (pos.pageX - offset[0]) + "px, " + (pos.pageY - offset[1]) + "px)";
         var elementIndex = others.reduce(function (prev, el, i) {
-            // eslint-disable-next-line no-nested-ternary
-            return prev === -1
-                ? i
-                : Math.abs(el.getBoundingClientRect().top - pos.clientY) <
-                    Math.abs(others[prev].getBoundingClientRect().top - pos.clientY)
-                    ? i
-                    : prev;
+            if (prev === -1)
+                return i;
+            return calcDist(el, pos) < calcDist(others[prev], pos) ? i : prev;
         }, -1);
-        (_b = (_a = closestElement.current) === null || _a === void 0 ? void 0 : _a.classList) === null || _b === void 0 ? void 0 : _b.remove(hoverClassName);
         closestIndex.current = elementIndex;
-        closestElement.current = others[elementIndex];
-        if ((elementIndex > index ? elementIndex - 1 : elementIndex) !== index) {
-            (_d = (_c = closestElement.current) === null || _c === void 0 ? void 0 : _c.classList) === null || _d === void 0 ? void 0 : _d.add(hoverClassName);
+        if (config.mode === 'between' &&
+            (elementIndex > index ? elementIndex - 1 : elementIndex) !== index) {
+            setHoveredIndex(elementIndex);
         }
-    }, [isGrabbing, offset, ref, others, index, hoverClassName]);
+        else if (config.mode !== 'between' && elementIndex !== index) {
+            setHoveredIndex(elementIndex);
+        }
+        else {
+            setHoveredIndex(undefined);
+        }
+    }, [isGrabbing, offset, ref, others, index, setHoveredIndex, config.mode, calcDist]);
     var dragStart = React.useCallback(function (e, pos) {
         setIsGrabbing(true);
         if (e)
@@ -149,26 +164,25 @@ function useOrder(_a) {
         ref.current.style.transform = "translate(" + (pos.pageX - offs[0]) + "px, " + (pos.pageY - offs[1]) + "px)";
     }, [ref]);
     var dragEnd = React.useCallback(function () {
-        var _a, _b;
         if (!isGrabbing)
             return;
         var i = closestIndex.current;
         if (i !== undefined) {
-            if (i > index)
+            if (config.mode === 'between' && i > index)
                 i -= 1;
             if (i !== index) {
                 onMove(i);
             }
         }
-        (_b = (_a = closestElement.current) === null || _a === void 0 ? void 0 : _a.classList) === null || _b === void 0 ? void 0 : _b.remove(hoverClassName);
+        // closestElement.current?.classList?.remove(hoverClassName);
         if (ref.current)
             ref.current.style.transform = '';
-        closestElement.current = undefined;
         closestIndex.current = undefined;
+        setHoveredIndex(undefined);
         if (isMounted()) {
             setIsGrabbing(false);
         }
-    }, [isGrabbing, index, isMounted, onMove, ref, hoverClassName]);
+    }, [isGrabbing, index, isMounted, onMove, ref, setHoveredIndex, config.mode]);
     var mouseDown = function (e) { return dragStart(e, e); };
     var mouseMove = function (e) { return dragMove(e, e); };
     var touchStart = function (e) { return dragStart(null, e.touches[0]); };
@@ -187,6 +201,7 @@ function useOrder(_a) {
     });
     return {
         isGrabbing: isGrabbing,
+        isHover: hoveredIndex === index,
         mouseDown: mouseDown,
         mouseMove: mouseMove,
         touchStart: touchStart,
@@ -203,27 +218,95 @@ function useOrder(_a) {
     };
 }
 
+function createCommonjsModule(fn, basedir, module) {
+	return module = {
+		path: basedir,
+		exports: {},
+		require: function (path, base) {
+			return commonjsRequire(path, (base === undefined || base === null) ? module.path : base);
+		}
+	}, fn(module, module.exports), module.exports;
+}
+
+function commonjsRequire () {
+	throw new Error('Dynamic requires are not currently supported by @rollup/plugin-commonjs');
+}
+
+var classnames = createCommonjsModule(function (module) {
+/*!
+  Copyright (c) 2018 Jed Watson.
+  Licensed under the MIT License (MIT), see
+  http://jedwatson.github.io/classnames
+*/
+/* global define */
+
+(function () {
+
+	var hasOwn = {}.hasOwnProperty;
+
+	function classNames() {
+		var classes = [];
+
+		for (var i = 0; i < arguments.length; i++) {
+			var arg = arguments[i];
+			if (!arg) continue;
+
+			var argType = typeof arg;
+
+			if (argType === 'string' || argType === 'number') {
+				classes.push(arg);
+			} else if (Array.isArray(arg)) {
+				if (arg.length) {
+					var inner = classNames.apply(null, arg);
+					if (inner) {
+						classes.push(inner);
+					}
+				}
+			} else if (argType === 'object') {
+				if (arg.toString === Object.prototype.toString) {
+					for (var key in arg) {
+						if (hasOwn.call(arg, key) && arg[key]) {
+							classes.push(key);
+						}
+					}
+				} else {
+					classes.push(arg.toString());
+				}
+			}
+		}
+
+		return classes.join(' ');
+	}
+
+	if (module.exports) {
+		classNames.default = classNames;
+		module.exports = classNames;
+	} else {
+		window.classNames = classNames;
+	}
+}());
+});
+
 var OrderItemContext = React.createContext({
     mouseDown: function () { return null; },
     touchStart: function () { return null; },
 });
 function OrderItem(_a) {
-    var children = _a.children, index = _a.index, onMove = _a.onMove, style = _a.style, inactiveStyle = _a.inactiveStyle, grabbingStyle = _a.grabbingStyle, _b = _a.grabbingClassName, grabbingClassName = _b === void 0 ? '' : _b, _c = _a.wrapperClassName, wrapperClassName = _c === void 0 ? '' : _c, _d = _a.className, className = _d === void 0 ? '' : _d, hoverClassName = _a.hoverClassName;
+    var children = _a.children, index = _a.index, onMove = _a.onMove, style = _a.style, _b = _a.wrapperClassName, wrapperClassName = _b === void 0 ? '' : _b, _c = _a.wrapperHoverClassName, wrapperHoverClassName = _c === void 0 ? '' : _c, _d = _a.wrapperStyle, wrapperStyle = _d === void 0 ? {} : _d, _e = _a.wrapperHoverStyle, wrapperHoverStyle = _e === void 0 ? {} : _e, _f = _a.className, className = _f === void 0 ? '' : _f, _g = _a.inactiveStyle, inactiveStyle = _g === void 0 ? {} : _g, _h = _a.grabbingStyle, grabbingStyle = _h === void 0 ? {} : _h, _j = _a.inactiveClassName, inactiveClassName = _j === void 0 ? '' : _j, _k = _a.grabbingClassName, grabbingClassName = _k === void 0 ? '' : _k, _l = _a.hoverClassName, hoverClassName = _l === void 0 ? '' : _l, _m = _a.hoverStyle, hoverStyle = _m === void 0 ? {} : _m;
     var elementRef = React.useRef();
     var wrapperRef = React.useRef();
-    var _e = useOrder({
+    var _o = useOrder({
         elementRef: elementRef,
         wrapperRef: wrapperRef,
         index: index,
         onMove: onMove,
-        hoverClassName: hoverClassName,
-    }), mouseDown = _e.mouseDown, mouseMove = _e.mouseMove, touchStart = _e.touchStart, touchMove = _e.touchMove, isGrabbing = _e.isGrabbing, elementStyle = _e.elementStyle;
+    }), mouseDown = _o.mouseDown, mouseMove = _o.mouseMove, touchStart = _o.touchStart, touchMove = _o.touchMove, isGrabbing = _o.isGrabbing, isHover = _o.isHover, elementStyle = _o.elementStyle;
     var context = React.useState({
         mouseDown: mouseDown,
         touchStart: touchStart,
     })[0];
-    return (React__default['default'].createElement("div", { ref: wrapperRef, className: wrapperClassName },
-        React__default['default'].createElement("div", { ref: elementRef, className: className + (isGrabbing ? " " + grabbingClassName : ''), style: __assign(__assign(__assign({}, elementStyle), style), (isGrabbing ? grabbingStyle : inactiveStyle)), onMouseMove: mouseMove, onTouchMove: touchMove },
+    return (React__default['default'].createElement("div", { ref: wrapperRef, className: classnames(wrapperClassName, isHover && wrapperHoverClassName), style: __assign(__assign({}, wrapperStyle), (isHover ? wrapperHoverStyle : {})) },
+        React__default['default'].createElement("div", { ref: elementRef, className: classnames(className, isGrabbing && grabbingClassName, !isGrabbing && inactiveClassName, isHover && hoverClassName), style: __assign(__assign(__assign(__assign({}, elementStyle), style), (isGrabbing ? grabbingStyle : inactiveStyle)), (isHover ? hoverStyle : {})), onMouseMove: mouseMove, onTouchMove: touchMove },
             React__default['default'].createElement(OrderItemContext.Provider, { value: context }, children))));
 }
 OrderItem.Handle = function OrderItemHandle(_a) {
@@ -266,12 +349,13 @@ styleInject(css_248z);
 
 var item = {
     wrapperClassName: 'rdo-wrapper',
+    wrapperHoverClassName: 'rdo-hover',
     className: 'rdo-item',
-    hoverClassName: 'rdo-hover',
     grabbingClassName: 'rdo-item-grabbing',
 };
 var group = {
     className: 'rdo-group',
+    mode: 'between',
 };
 var handle = {
     className: 'rdo-item-handle',
