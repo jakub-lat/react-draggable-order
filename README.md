@@ -9,7 +9,7 @@ Take a look [here](https://piratehacker.github.io/react-draggable-order) for a w
 ## Basic usage
 
 ```jsx
-import { OrderGroup, OrderItem, defaultTheme } from 'react-draggable-order';
+import { OrderGroup, OrderItem, defaultTheme, arrayMove } from 'react-draggable-order';
 
 // in your component
 
